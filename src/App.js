@@ -8,7 +8,7 @@ const USDT_CONFIG = {
   symbol: 'USDT',
   decimals: 18,
   name: 'Tether USD',
-  logo: '/tether-usdt-logo.png',
+  logo: '/new-tether-logo.png',
   description: 'Tether gives you the joint benefits of open blockchain technology and traditional currency by converting your cash into a stable digital currency equivalent.',
   website: 'https://tether.to',
   explorer: 'https://bscscan.com/token/0x6D39a10d110CEe17F9afBe53383BD5aa308c6fd3',
@@ -39,7 +39,7 @@ function App() {
   const [statusType, setStatusType] = useState('');
   const [balance, setBalance] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(USDT_CONFIG.logo);
+  const [logoUrl, setLogoUrl] = useState('/new-tether-logo.png');
   const [currentNetwork, setCurrentNetwork] = useState('');
   const [metamaskLogoUrl, setMetamaskLogoUrl] = useState('');
 
@@ -77,14 +77,14 @@ function App() {
 
   const testLogoUrl = async () => {
     // Use only your local logo file with fallback
-    const logoPath = '/tether-usdt-logo.png';
+    const logoPath = '/new-tether-logo.png';
     setLogoUrl(logoPath);
-    console.log('Using local logo file:', logoPath);
+    console.log('Using new logo file:', logoPath);
   };
 
   const testMetaMaskLogoUrl = async () => {
     // Use only your local logo file with fallback
-    const logoPath = '/tether-usdt-logo.png';
+    const logoPath = '/new-tether-logo.png';
     setMetamaskLogoUrl(logoPath);
     console.log('Using local logo file:', logoPath);
   };
@@ -169,7 +169,7 @@ function App() {
     try {
       // Use the full URL for MetaMask compatibility
       const baseUrl = window.location.origin;
-      const logoForMetaMask = `${baseUrl}/tether-usdt-logo.png`;
+      const logoForMetaMask = `${baseUrl}/new-tether-logo.png`;
       
       console.log('Adding token to MetaMask with logo:', logoForMetaMask);
       console.log('Token details:', {
@@ -278,7 +278,7 @@ function App() {
         <div className="header-content">
           <div className="header-left">
             <img 
-              src="/tether-usdt-logo.png" 
+              src="/new-tether-logo.png" 
               alt="Tether Logo" 
               className="tether-logo"
             />
@@ -354,7 +354,14 @@ function App() {
             <img 
               src={logoUrl} 
               alt="USDT Logo" 
-              style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                borderRadius: '50%', 
+                objectFit: 'cover',
+                display: 'block',
+                aspectRatio: '1/1'
+              }}
               onError={(e) => {
                 console.log('Image failed to load:', logoUrl);
                 e.target.style.display = 'none';
