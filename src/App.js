@@ -181,33 +181,68 @@ function App() {
         image: logoForMetaMask
       });
       
-      const wasAdded = await provider.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC20',
-          options: {
-            address: USDT_CONFIG.address,
-            symbol: USDT_CONFIG.symbol,
-            decimals: USDT_CONFIG.decimals,
-            image: logoForMetaMask,
-            name: USDT_CONFIG.name,
+      // Try the standard method first
+      try {
+        const wasAdded = await provider.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: USDT_CONFIG.address,
+              symbol: USDT_CONFIG.symbol,
+              decimals: USDT_CONFIG.decimals,
+              image: logoForMetaMask,
+              name: USDT_CONFIG.name,
+            },
           },
-        },
-      });
+        });
 
-      if (wasAdded) {
-        setStatus('USDT token successfully added to MetaMask! The logo should appear in your wallet.');
-        setStatusType('success');
-      } else {
-        setStatus('Token was not added. Please try again.');
-        setStatusType('error');
+        if (wasAdded) {
+          setStatus('USDT token successfully added to MetaMask! The logo should appear in your wallet.');
+          setStatusType('success');
+          return;
+        }
+      } catch (standardError) {
+        console.log('Standard method failed, trying alternative method:', standardError);
+        
+        // Try alternative method for Android MetaMask
+        try {
+          const wasAdded = await provider.request({
+            method: 'wallet_watchAsset',
+            params: {
+              type: 'ERC20',
+              options: {
+                address: USDT_CONFIG.address,
+                symbol: USDT_CONFIG.symbol,
+                decimals: USDT_CONFIG.decimals,
+                name: USDT_CONFIG.name,
+                // Remove image for Android compatibility
+              },
+            },
+          });
+
+          if (wasAdded) {
+            setStatus('USDT token added to MetaMask! (Logo may not appear on Android)');
+            setStatusType('success');
+            return;
+          }
+        } catch (altError) {
+          console.log('Alternative method also failed:', altError);
+          throw altError;
+        }
       }
+
+      setStatus('Token was not added. Please try again.');
+      setStatusType('error');
     } catch (error) {
       console.error('Error adding token:', error);
       if (error.code === 4001) {
         setStatus('User rejected the token import request.');
+      } else if (error.code === -32601) {
+        setStatus('This method is not supported on your device. Please add the token manually using the contract address.');
+        setStatusType('error');
       } else {
-        setStatus('Error adding token to MetaMask. Please try again.');
+        setStatus('Error adding token to MetaMask. Please try again or add manually.');
       }
       setStatusType('error');
     } finally {
@@ -347,10 +382,25 @@ function App() {
             <p><strong>Total Supply:</strong> {USDT_CONFIG.totalSupply}</p>
             <p><strong>Contract:</strong> {USDT_CONFIG.address}</p>
             <p><strong>Description:</strong> {USDT_CONFIG.description}</p>
-            <div style={{ marginTop: '10px' }}>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <a href={USDT_CONFIG.explorer} target="_blank" rel="noopener noreferrer" style={{ color: '#009393', textDecoration: 'none', fontWeight: '500' }}>
                 🔍 View on BSCScan
               </a>
+              <button 
+                onClick={copyAddress}
+                style={{ 
+                  background: 'transparent', 
+                  border: '1px solid #009393', 
+                  color: '#009393', 
+                  padding: '8px 12px', 
+                  borderRadius: '6px', 
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                📋 Copy Contract Address
+              </button>
             </div>
           </div>
         </div>
@@ -365,13 +415,26 @@ function App() {
               {isLoading ? 'Connecting...' : 'Connect Wallet'}
             </button>
           ) : (
-            <button 
-              className="btn btn-success" 
-              onClick={addTokenToMetaMask}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
-            </button>
+            <div>
+              <button 
+                className="btn btn-success" 
+                onClick={addTokenToMetaMask}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
+              </button>
+              <div style={{ 
+                marginTop: '10px', 
+                padding: '12px', 
+                background: '#f8f9fa', 
+                border: '1px solid #e9ecef', 
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#6c757d'
+              }}>
+                <strong>📱 Android Users:</strong> If the automatic import doesn't work, copy the contract address above and manually add the token in MetaMask using "Import tokens" → "Custom token".
+              </div>
+            </div>
           )}
         </div>
       </div>
