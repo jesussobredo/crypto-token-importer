@@ -382,25 +382,10 @@ function App() {
             <p><strong>Total Supply:</strong> {USDT_CONFIG.totalSupply}</p>
             <p><strong>Contract:</strong> {USDT_CONFIG.address}</p>
             <p><strong>Description:</strong> {USDT_CONFIG.description}</p>
-            <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ marginTop: '10px' }}>
               <a href={USDT_CONFIG.explorer} target="_blank" rel="noopener noreferrer" style={{ color: '#009393', textDecoration: 'none', fontWeight: '500' }}>
                 🔍 View on BSCScan
               </a>
-              <button 
-                onClick={copyAddress}
-                style={{ 
-                  background: 'transparent', 
-                  border: '1px solid #009393', 
-                  color: '#009393', 
-                  padding: '8px 12px', 
-                  borderRadius: '6px', 
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                📋 Copy Contract Address
-              </button>
             </div>
           </div>
         </div>
@@ -415,26 +400,13 @@ function App() {
               {isLoading ? 'Connecting...' : 'Connect Wallet'}
             </button>
           ) : (
-            <div>
-              <button 
-                className="btn btn-success" 
-                onClick={addTokenToMetaMask}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
-              </button>
-              <div style={{ 
-                marginTop: '10px', 
-                padding: '12px', 
-                background: '#f8f9fa', 
-                border: '1px solid #e9ecef', 
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#6c757d'
-              }}>
-                <strong>📱 Android Users:</strong> If the automatic import doesn't work, copy the contract address above and manually add the token in MetaMask using "Import tokens" → "Custom token".
-              </div>
-            </div>
+            <button 
+              className="btn btn-success" 
+              onClick={addTokenToMetaMask}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
+            </button>
           )}
         </div>
       </div>
