@@ -270,13 +270,42 @@ function App() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>🚀 Crypto Token Importer</h1>
-        <p>Connect your MetaMask wallet and import USDT tokens on BSC</p>
+      {/* Official Tether Header */}
+      <header className="tether-header">
+        <div className="header-content">
+          <div className="header-left">
+            <img 
+              src="/tether-usdt-logo.png" 
+              alt="Tether Logo" 
+              className="tether-logo"
+            />
+            <span className="tether-brand">Tether</span>
+          </div>
+          
+          <nav className="header-nav">
+            <a href="https://tether.to/en/why-tether" target="_blank" rel="noopener noreferrer" className="nav-link">Why Tether?</a>
+            <a href="https://tether.to/en/how-it-works" target="_blank" rel="noopener noreferrer" className="nav-link">How it works</a>
+            <a href="https://tether.io/news/" target="_blank" rel="noopener noreferrer" className="nav-link">News</a>
+            <a href="https://gold.tether.to/" target="_blank" rel="noopener noreferrer" className="nav-link">Tether Gold</a>
+            <a href="https://tether.to/en/transparency/?tab=usdt" target="_blank" rel="noopener noreferrer" className="nav-link">Transparency</a>
+          </nav>
+          
+          <div className="header-auth">
+            <a href="https://app.tether.to/app/login" target="_blank" rel="noopener noreferrer" className="auth-btn login-btn">Log In</a>
+            <a href="https://tether.to/en/geo/eu/" target="_blank" rel="noopener noreferrer" className="auth-btn signup-btn">Sign Up</a>
+          </div>
+        </div>
+      </header>
+
+      <div className="hero-section">
+        <h1 className="hero-title">Tether token</h1>
+        <p className="hero-description">
+          Connect your MetaMask wallet and import USDT tokens on Binance Smart Chain
+        </p>
       </div>
 
       <div className="card">
-        <h2>Wallet Connection</h2>
+        <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>Wallet Connection</h2>
         {!isConnected ? (
           <div>
             <p>Connect your MetaMask wallet to get started.</p>
@@ -316,7 +345,7 @@ function App() {
       </div>
 
       <div className="card">
-        <h2>USDT Token Information</h2>
+        <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>USDT Token Information</h2>
         <div className="token-info">
           <div className="token-logo">
             <img 
@@ -346,11 +375,8 @@ function App() {
             <p><strong>Contract:</strong> {USDT_CONFIG.address}</p>
             <p><strong>Description:</strong> {USDT_CONFIG.description}</p>
             <div style={{ marginTop: '10px' }}>
-              <a href={USDT_CONFIG.website} target="_blank" rel="noopener noreferrer" style={{ color: '#667eea', textDecoration: 'none', marginRight: '15px' }}>
-                🌐 Official Website
-              </a>
-              <a href={USDT_CONFIG.explorer} target="_blank" rel="noopener noreferrer" style={{ color: '#667eea', textDecoration: 'none' }}>
-                🔍 View on Etherscan
+              <a href={USDT_CONFIG.explorer} target="_blank" rel="noopener noreferrer" style={{ color: '#009393', textDecoration: 'none', fontWeight: '500' }}>
+                🔍 View on BSCScan
               </a>
             </div>
           </div>
@@ -364,13 +390,6 @@ function App() {
           >
             {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
           </button>
-          
-          <button 
-            className="btn btn-secondary" 
-            onClick={copyAddress}
-          >
-            Copy Contract Address
-          </button>
         </div>
       </div>
 
@@ -381,7 +400,7 @@ function App() {
       )}
 
       <div className="card">
-        <h2>How to Use</h2>
+        <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>How to Use</h2>
         <ol style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
           <li>Make sure you have MetaMask installed in your browser</li>
           <li>Click "Connect MetaMask" to connect your wallet</li>
@@ -389,9 +408,23 @@ function App() {
           <li>Click "Add USDT to MetaMask" to import the BSC USDT token</li>
           <li>The USDT token will appear in your MetaMask wallet on BSC</li>
         </ol>
-        <div style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-          <h4>📝 Note:</h4>
-          <p>This app is configured for <strong>Binance Smart Chain (BSC)</strong>. Make sure you have BNB for gas fees when importing tokens.</p>
+        <div style={{ marginTop: '20px', padding: '20px', background: 'linear-gradient(135deg, rgba(0, 147, 147, 0.05), rgba(146, 219, 209, 0.05))', borderRadius: '12px', border: '1px solid rgba(0, 147, 147, 0.1)' }}>
+          <h4 style={{ color: '#009393', marginBottom: '10px' }}>📝 Note:</h4>
+          <p style={{ color: '#333', lineHeight: '1.6' }}>This app is configured for <strong>Binance Smart Chain (BSC)</strong>. Make sure you have BNB for gas fees when importing tokens.</p>
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '40px', padding: '20px', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <p style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
+          Powered by Tether • Built for the future of digital currency
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '15px' }}>
+          <a href="https://tether.to" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>
+            Official Website
+          </a>
+          <a href="https://bscscan.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>
+            BSC Explorer
+          </a>
         </div>
       </div>
     </div>
