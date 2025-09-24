@@ -167,8 +167,9 @@ function App() {
 
     setIsLoading(true);
     try {
-      // Use the tested MetaMask-compatible logo URL (prefer your logo file)
-      const logoForMetaMask = metamaskLogoUrl || '/tether-usdt-logo.png';
+      // Use the full URL for MetaMask compatibility
+      const baseUrl = window.location.origin;
+      const logoForMetaMask = `${baseUrl}/tether-usdt-logo.png`;
       
       console.log('Adding token to MetaMask with logo:', logoForMetaMask);
       console.log('Token details:', {
