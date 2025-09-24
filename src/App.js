@@ -8,7 +8,7 @@ const USDT_CONFIG = {
   symbol: 'USDT',
   decimals: 18,
   name: 'Tether USD',
-  logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+  logo: '/tether-usdt-logo.png',
   description: 'Tether gives you the joint benefits of open blockchain technology and traditional currency by converting your cash into a stable digital currency equivalent.',
   website: 'https://tether.to',
   explorer: 'https://bscscan.com/token/0x6D39a10d110CEe17F9afBe53383BD5aa308c6fd3',
@@ -76,55 +76,15 @@ function App() {
   };
 
   const testLogoUrl = async () => {
-    const fallbackUrls = [
-      'https://cryptologos.cc/logos/tether-usdt-logo.png',
-      'https://assets.coingecko.com/coins/images/325/large/Tether.png',
-      'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png'
-    ];
-    
-    // Test each URL
-    for (const url of fallbackUrls) {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        if (response.ok) {
-          setLogoUrl(url);
-          console.log('Logo URL working:', url);
-          return;
-        }
-      } catch (error) {
-        console.log('Logo URL failed:', url, error);
-      }
-    }
-    
-    // If all URLs fail, use a simple data URL as last resort
-    const fallbackDataUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMyNkE1M0MiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+VXNkdDwvdGV4dD4KPC9zdmc+';
-    setLogoUrl(fallbackDataUrl);
-    console.log('Using data URL fallback logo');
+    // Use only your local logo file
+    setLogoUrl('/tether-usdt-logo.png');
+    console.log('Using local logo file:', '/tether-usdt-logo.png');
   };
 
   const testMetaMaskLogoUrl = async () => {
-    // MetaMask-compatible logo URLs (must be HTTPS and accessible)
-    const metamaskLogoUrls = [
-      'https://assets.coingecko.com/coins/images/325/large/Tether.png',
-      'https://cryptologos.cc/logos/tether-usdt-logo.png',
-      'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png'
-    ];
-    
-    for (const url of metamaskLogoUrls) {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        if (response.ok) {
-          setMetamaskLogoUrl(url);
-          console.log('MetaMask logo URL working:', url);
-          return;
-        }
-      } catch (error) {
-        console.log('MetaMask logo URL failed:', url);
-      }
-    }
-    
-    // Fallback to CoinGecko URL
-    setMetamaskLogoUrl('https://assets.coingecko.com/coins/images/325/large/Tether.png');
+    // Use only your local logo file
+    setMetamaskLogoUrl('/tether-usdt-logo.png');
+    console.log('Using local logo file:', '/tether-usdt-logo.png');
   };
 
   const checkConnection = async () => {
@@ -205,8 +165,8 @@ function App() {
 
     setIsLoading(true);
     try {
-      // Use the tested MetaMask-compatible logo URL
-      const logoForMetaMask = metamaskLogoUrl || 'https://assets.coingecko.com/coins/images/325/large/Tether.png';
+      // Use the tested MetaMask-compatible logo URL (prefer your logo file)
+      const logoForMetaMask = metamaskLogoUrl || '/tether-usdt-logo.png';
       
       console.log('Adding token to MetaMask with logo:', logoForMetaMask);
       console.log('Token details:', {
