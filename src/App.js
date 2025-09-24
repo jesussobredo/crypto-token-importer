@@ -8,7 +8,7 @@ const USDT_CONFIG = {
   symbol: 'USDT',
   decimals: 18,
   name: 'Tether USD',
-  logo: 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+  logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
   description: 'Tether gives you the joint benefits of open blockchain technology and traditional currency by converting your cash into a stable digital currency equivalent.',
   website: 'https://tether.to',
   explorer: 'https://bscscan.com/token/0x6D39a10d110CEe17F9afBe53383BD5aa308c6fd3',
@@ -74,16 +74,30 @@ function App() {
   };
 
   const testLogoUrl = async () => {
-    try {
-      const response = await fetch(USDT_CONFIG.logo, { method: 'HEAD' });
-      if (!response.ok) {
-        // Fallback to a more reliable USDT logo URL
-        setLogoUrl('https://cryptologos.cc/logos/tether-usdt-logo.png');
+    const fallbackUrls = [
+      'https://cryptologos.cc/logos/tether-usdt-logo.png',
+      'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+      'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png'
+    ];
+    
+    // Test each URL
+    for (const url of fallbackUrls) {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          setLogoUrl(url);
+          console.log('Logo URL working:', url);
+          return;
+        }
+      } catch (error) {
+        console.log('Logo URL failed:', url, error);
       }
-    } catch (error) {
-      console.log('Using fallback logo URL');
-      setLogoUrl('https://cryptologos.cc/logos/tether-usdt-logo.png');
     }
+    
+    // If all URLs fail, use a simple data URL as last resort
+    const fallbackDataUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMyNkE1M0MiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+VXNkdDwvdGV4dD4KPC9zdmc+';
+    setLogoUrl(fallbackDataUrl);
+    console.log('Using data URL fallback logo');
   };
 
   const checkConnection = async () => {
@@ -305,10 +319,14 @@ function App() {
             <img 
               src={logoUrl} 
               alt="USDT Logo" 
-              style={{ width: '100%', height: '100%', borderRadius: '50%' }}
+              style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               onError={(e) => {
+                console.log('Image failed to load:', logoUrl);
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', logoUrl);
               }}
             />
             <div style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(45deg, #667eea, #764ba2)', color: 'white', fontWeight: 'bold', fontSize: '18px', borderRadius: '50%' }}>
