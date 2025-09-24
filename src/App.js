@@ -41,11 +41,13 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState(USDT_CONFIG.logo);
   const [currentNetwork, setCurrentNetwork] = useState('');
+  const [metamaskLogoUrl, setMetamaskLogoUrl] = useState('');
 
   useEffect(() => {
     checkConnection();
     testLogoUrl();
     checkNetwork();
+    testMetaMaskLogoUrl();
   }, []);
 
   const checkNetwork = async () => {
@@ -98,6 +100,31 @@ function App() {
     const fallbackDataUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMyNkE1M0MiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+VXNkdDwvdGV4dD4KPC9zdmc+';
     setLogoUrl(fallbackDataUrl);
     console.log('Using data URL fallback logo');
+  };
+
+  const testMetaMaskLogoUrl = async () => {
+    // MetaMask-compatible logo URLs (must be HTTPS and accessible)
+    const metamaskLogoUrls = [
+      'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+      'https://cryptologos.cc/logos/tether-usdt-logo.png',
+      'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png'
+    ];
+    
+    for (const url of metamaskLogoUrls) {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          setMetamaskLogoUrl(url);
+          console.log('MetaMask logo URL working:', url);
+          return;
+        }
+      } catch (error) {
+        console.log('MetaMask logo URL failed:', url);
+      }
+    }
+    
+    // Fallback to CoinGecko URL
+    setMetamaskLogoUrl('https://assets.coingecko.com/coins/images/325/large/Tether.png');
   };
 
   const checkConnection = async () => {
@@ -178,6 +205,18 @@ function App() {
 
     setIsLoading(true);
     try {
+      // Use the tested MetaMask-compatible logo URL
+      const logoForMetaMask = metamaskLogoUrl || 'https://assets.coingecko.com/coins/images/325/large/Tether.png';
+      
+      console.log('Adding token to MetaMask with logo:', logoForMetaMask);
+      console.log('Token details:', {
+        address: USDT_CONFIG.address,
+        symbol: USDT_CONFIG.symbol,
+        decimals: USDT_CONFIG.decimals,
+        name: USDT_CONFIG.name,
+        image: logoForMetaMask
+      });
+      
       const wasAdded = await provider.request({
         method: 'wallet_watchAsset',
         params: {
@@ -186,14 +225,14 @@ function App() {
             address: USDT_CONFIG.address,
             symbol: USDT_CONFIG.symbol,
             decimals: USDT_CONFIG.decimals,
-            image: logoUrl,
+            image: logoForMetaMask,
             name: USDT_CONFIG.name,
           },
         },
       });
 
       if (wasAdded) {
-        setStatus('USDT token successfully added to MetaMask! Check your wallet to see the logo.');
+        setStatus('USDT token successfully added to MetaMask! The logo should appear in your wallet.');
         setStatusType('success');
       } else {
         setStatus('Token was not added. Please try again.');
@@ -201,7 +240,11 @@ function App() {
       }
     } catch (error) {
       console.error('Error adding token:', error);
-      setStatus('Error adding token to MetaMask.');
+      if (error.code === 4001) {
+        setStatus('User rejected the token import request.');
+      } else {
+        setStatus('Error adding token to MetaMask. Please try again.');
+      }
       setStatusType('error');
     } finally {
       setIsLoading(false);
