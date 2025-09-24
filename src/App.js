@@ -356,13 +356,23 @@ function App() {
         </div>
         
         <div style={{ marginTop: '20px' }}>
-          <button 
-            className="btn btn-success" 
-            onClick={addTokenToMetaMask}
-            disabled={!isConnected || isLoading}
-          >
-            {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
-          </button>
+          {!isConnected ? (
+            <button 
+              className="btn btn-primary" 
+              onClick={connectWallet}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          ) : (
+            <button 
+              className="btn btn-success" 
+              onClick={addTokenToMetaMask}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
+            </button>
+          )}
         </div>
       </div>
 

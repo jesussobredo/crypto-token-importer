@@ -68,6 +68,11 @@ code {
   box-shadow: 0 4px 16px rgba(211, 178, 91, 0.3);
 }
 
+.btn-primary {
+  background: linear-gradient(135deg, #009393, #92DBD1);
+  box-shadow: 0 4px 16px rgba(0, 147, 147, 0.3);
+}
+
 .btn-success {
   background: linear-gradient(135deg, #009393, #92DBD1);
   box-shadow: 0 4px 16px rgba(0, 147, 147, 0.3);
