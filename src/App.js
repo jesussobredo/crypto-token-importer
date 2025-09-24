@@ -76,15 +76,17 @@ function App() {
   };
 
   const testLogoUrl = async () => {
-    // Use only your local logo file
-    setLogoUrl('/tether-usdt-logo.png');
-    console.log('Using local logo file:', '/tether-usdt-logo.png');
+    // Use only your local logo file with fallback
+    const logoPath = '/tether-usdt-logo.png';
+    setLogoUrl(logoPath);
+    console.log('Using local logo file:', logoPath);
   };
 
   const testMetaMaskLogoUrl = async () => {
-    // Use only your local logo file
-    setMetamaskLogoUrl('/tether-usdt-logo.png');
-    console.log('Using local logo file:', '/tether-usdt-logo.png');
+    // Use only your local logo file with fallback
+    const logoPath = '/tether-usdt-logo.png';
+    setMetamaskLogoUrl(logoPath);
+    console.log('Using local logo file:', logoPath);
   };
 
   const checkConnection = async () => {
