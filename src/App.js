@@ -42,6 +42,7 @@ function App() {
   const [logoUrl, setLogoUrl] = useState('/new-tether-logo.png');
   const [currentNetwork, setCurrentNetwork] = useState('');
   const [metamaskLogoUrl, setMetamaskLogoUrl] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkConnection();
@@ -285,67 +286,29 @@ function App() {
             <span className="tether-brand">Tether</span>
           </div>
           
-          <nav className="header-nav">
-            <a href="https://tether.to/en/why-tether" target="_blank" rel="noopener noreferrer" className="nav-link">Why Tether?</a>
-            <a href="https://tether.to/en/how-it-works" target="_blank" rel="noopener noreferrer" className="nav-link">How it works</a>
-            <a href="https://tether.io/news/" target="_blank" rel="noopener noreferrer" className="nav-link">News</a>
-            <a href="https://gold.tether.to/" target="_blank" rel="noopener noreferrer" className="nav-link">Tether Gold</a>
-            <a href="https://tether.to/en/transparency/?tab=usdt" target="_blank" rel="noopener noreferrer" className="nav-link">Transparency</a>
+          <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <a href="https://tether.to/en/why-tether" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Why Tether?</a>
+            <a href="https://tether.to/en/how-it-works" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>How it works</a>
+            <a href="https://tether.io/news/" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>News</a>
+            <a href="https://gold.tether.to/" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Tether Gold</a>
+            <a href="https://tether.to/en/transparency/?tab=usdt" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Transparency</a>
           </nav>
           
           <div className="header-auth">
             <a href="https://app.tether.to/app/login" target="_blank" rel="noopener noreferrer" className="auth-btn login-btn">Log In</a>
             <a href="https://tether.to/en/geo/eu/" target="_blank" rel="noopener noreferrer" className="auth-btn signup-btn">Sign Up</a>
+            <button 
+              className="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              ☰
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="hero-section">
-        <h1 className="hero-title">Tether token</h1>
-        <p className="hero-description">
-          Connect your MetaMask wallet and import USDT tokens on Binance Smart Chain
-        </p>
-      </div>
 
-      <div className="card">
-        <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>Wallet Connection</h2>
-        {!isConnected ? (
-          <div>
-            <p>Connect your MetaMask wallet to get started.</p>
-            <button 
-              className="btn" 
-              onClick={connectWallet}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Connecting...' : 'Connect MetaMask'}
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div className="status status-success">
-              ✅ Connected to: {account?.slice(0, 6)}...{account?.slice(-4)}
-            </div>
-            <div className="status status-info">
-              💰 Balance: {balance} {currentNetwork === 'Binance Smart Chain' ? 'BNB' : 'ETH'}
-            </div>
-            <div className="status status-info">
-              🌐 Network: {currentNetwork || 'Unknown'}
-            </div>
-            {currentNetwork !== 'Binance Smart Chain' && (
-              <button 
-                className="btn btn-secondary" 
-                onClick={switchToBSC}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Switching...' : 'Switch to BSC'}
-              </button>
-            )}
-            <button className="btn btn-secondary" onClick={disconnectWallet}>
-              Disconnect Wallet
-            </button>
-          </div>
-        )}
-      </div>
 
       <div className="card">
         <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>USDT Token Information</h2>
@@ -409,34 +372,93 @@ function App() {
         </div>
       )}
 
-      <div className="card">
-        <h2 style={{ color: '#009393', fontSize: '1.8rem', fontWeight: '600', marginBottom: '20px' }}>How to Use</h2>
-        <ol style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
-          <li>Make sure you have MetaMask installed in your browser</li>
-          <li>Click "Connect MetaMask" to connect your wallet</li>
-          <li>Click "Switch to BSC" if you're not on Binance Smart Chain</li>
-          <li>Click "Add USDT to MetaMask" to import the BSC USDT token</li>
-          <li>The USDT token will appear in your MetaMask wallet on BSC</li>
-        </ol>
-        <div style={{ marginTop: '20px', padding: '20px', background: 'linear-gradient(135deg, rgba(0, 147, 147, 0.05), rgba(146, 219, 209, 0.05))', borderRadius: '12px', border: '1px solid rgba(0, 147, 147, 0.1)' }}>
-          <h4 style={{ color: '#009393', marginBottom: '10px' }}>📝 Note:</h4>
-          <p style={{ color: '#333', lineHeight: '1.6' }}>This app is configured for <strong>Binance Smart Chain (BSC)</strong>. Make sure you have BNB for gas fees when importing tokens.</p>
-        </div>
-      </div>
 
-      <div style={{ textAlign: 'center', marginTop: '40px', padding: '20px', color: 'rgba(255, 255, 255, 0.8)' }}>
-        <p style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
-          Powered by Tether • Built for the future of digital currency
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '15px' }}>
-          <a href="https://tether.to" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>
-            Official Website
-          </a>
-          <a href="https://bscscan.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'none', fontSize: '0.9rem' }}>
-            BSC Explorer
-          </a>
+      <footer className="tether-footer">
+        <div className="footer-content">
+          <div className="footer-main">
+            <h2>Driving the Future of Money</h2>
+            <p>Tether supports and empowers growing ventures and innovation throughout the blockchain as a digital token built on multiple blockchains.</p>
+          </div>
+          
+          <div className="footer-links">
+            <div className="footer-section">
+              <h4>Tether</h4>
+              <ul>
+                <li><a href="https://tether.to/en/why-tether" target="_blank" rel="noopener noreferrer">Why Tether?</a></li>
+                <li><a href="https://tether.to/en/how-it-works" target="_blank" rel="noopener noreferrer">How It Works</a></li>
+                <li><a href="https://tether.to/en/knowledge-base" target="_blank" rel="noopener noreferrer">Knowledge Base</a></li>
+                <li><a href="https://tether.to/en/transparency" target="_blank" rel="noopener noreferrer">Transparency</a></li>
+                <li><a href="https://tether.to/en/fees" target="_blank" rel="noopener noreferrer">Fees</a></li>
+              </ul>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Company</h4>
+              <ul>
+                <li><a href="https://tether.to/en/about-us" target="_blank" rel="noopener noreferrer">About Us</a></li>
+                <li><a href="https://tether.to/en/careers" target="_blank" rel="noopener noreferrer">Careers</a></li>
+                <li><a href="https://tether.to/en/contact-us" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+                <li><a href="https://tether.to/en/legal-terms" target="_blank" rel="noopener noreferrer">Legal Terms</a></li>
+                <li><a href="https://tether.to/en/cookie-settings" target="_blank" rel="noopener noreferrer">Cookie Settings</a></li>
+              </ul>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Resources</h4>
+              <ul>
+                <li><a href="https://tether.io/news/" target="_blank" rel="noopener noreferrer">News</a></li>
+                <li><a href="https://tether.to/en/faqs" target="_blank" rel="noopener noreferrer">FAQs</a></li>
+                <li><a href="https://tether.to/en/integration-guidelines" target="_blank" rel="noopener noreferrer">Integration Guidelines</a></li>
+                <li><a href="https://tether.to/en/bug-bounty" target="_blank" rel="noopener noreferrer">Bug Bounty</a></li>
+                <li><a href="https://tether.to/en/media-assets" target="_blank" rel="noopener noreferrer">Media Assets</a></li>
+                <li><a href="https://tether.to/en/tether-facts" target="_blank" rel="noopener noreferrer">Tether Facts</a></li>
+                <li><a href="https://tether.to/en/relevant-information-document" target="_blank" rel="noopener noreferrer">Relevant Information Document</a></li>
+                <li><a href="https://tether.to/en/tether-channels" target="_blank" rel="noopener noreferrer">Tether Channels</a></li>
+                <li><a href="https://tether.to/en/security-features" target="_blank" rel="noopener noreferrer">Security Features</a></li>
+              </ul>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Products</h4>
+              <ul>
+                <li><a href="https://tether.to/en/tether-token-cnht" target="_blank" rel="noopener noreferrer">Tether token CNHt</a></li>
+                <li><a href="https://tether.to/en/tether-token-eurt" target="_blank" rel="noopener noreferrer">Tether token EURt</a></li>
+                <li><a href="https://tether.to/en/tether-token-mxnt" target="_blank" rel="noopener noreferrer">Tether token MXNt</a></li>
+                <li><a href="https://tether.to/en/tether-token-usdt" target="_blank" rel="noopener noreferrer">Tether token USDt</a></li>
+                <li><a href="https://tether.to/en/tether-gold-token-xaut" target="_blank" rel="noopener noreferrer">Tether Gold token - XAUt</a></li>
+                <li><a href="https://tether.to/en/alloy-by-tether" target="_blank" rel="noopener noreferrer">Alloy by Tether</a></li>
+              </ul>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Solutions</h4>
+              <ul>
+                <li><a href="https://tether.to/en/for-individuals" target="_blank" rel="noopener noreferrer">For Individuals</a></li>
+                <li><a href="https://tether.to/en/for-merchants" target="_blank" rel="noopener noreferrer">For Merchants</a></li>
+                <li><a href="https://tether.to/en/for-exchanges" target="_blank" rel="noopener noreferrer">For Exchanges</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
-      </div>
+        
+        <div className="footer-bottom">
+          <div className="footer-brand">
+            <div className="footer-logo">₮</div>
+            <span className="footer-brand-text">tether</span>
+            <span className="footer-copyright">Copyright © 2013 - 2025 Tether Operations, S.A. de C.V. All rights reserved.</span>
+          </div>
+          
+          <div className="footer-social">
+            <a href="https://instagram.com/tether.to" target="_blank" rel="noopener noreferrer" className="social-link">📷</a>
+            <a href="https://twitter.com/tether_to" target="_blank" rel="noopener noreferrer" className="social-link">🐦</a>
+            <a href="https://youtube.com/@tether" target="_blank" rel="noopener noreferrer" className="social-link">📺</a>
+            <a href="https://t.me/tether_official" target="_blank" rel="noopener noreferrer" className="social-link">✈️</a>
+            <a href="https://linkedin.com/company/tether" target="_blank" rel="noopener noreferrer" className="social-link">💼</a>
+            <a href="https://facebook.com/tether.to" target="_blank" rel="noopener noreferrer" className="social-link">📘</a>
+            <a href="https://reddit.com/r/Tether" target="_blank" rel="noopener noreferrer" className="social-link">🔴</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

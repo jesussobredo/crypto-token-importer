@@ -12,6 +12,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: #ffffff;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 code {
@@ -440,78 +441,409 @@ code {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .tether-header {
+    position: relative;
+  }
+  
   .header-content {
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    position: relative;
+  }
+  
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  
+  .tether-logo {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .tether-brand {
+    font-size: 18px;
   }
   
   .header-nav {
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    padding: 15px;
+    gap: 10px;
+    z-index: 1000;
+  }
+  
+  .header-nav.mobile-open {
+    display: flex;
+  }
+  
+  .nav-link {
+    font-size: 14px;
+    padding: 10px 15px;
+    text-align: left;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+  }
+  
+  .nav-link:hover {
+    background-color: #f8f9fa;
   }
   
   .header-auth {
+    display: flex;
     gap: 8px;
+    align-items: center;
   }
   
   .auth-btn {
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 13px;
+    min-width: 60px;
+  }
+  
+  .mobile-menu-toggle {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    color: #333;
+  }
+  
+  .mobile-menu-toggle:hover {
+    color: #009393;
+  }
+  
+  .hero-section {
+    padding: 40px 15px 30px;
   }
   
   .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-subtitle {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .hero-pipe {
-    display: none;
+    font-size: 2.2rem;
+    line-height: 1.2;
   }
   
   .hero-description {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    padding: 0 10px;
   }
   
   .card {
-    padding: 24px;
+    padding: 20px;
+    margin: 15px 0;
+  }
+  
+  .card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
   }
   
   .btn {
     width: 100%;
     margin: 8px 0;
+    padding: 12px 20px;
+    font-size: 16px;
   }
   
   .token-info {
     flex-direction: column;
     text-align: center;
+    padding: 15px;
   }
   
   .token-logo {
     margin: 0 auto 15px auto;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .token-details h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  .token-details p {
+    font-size: 13px;
+    margin: 8px 0;
+  }
+  
+  .status {
+    font-size: 14px;
+    padding: 10px 12px;
   }
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 5px;
+  }
+  
+  .header-content {
+    padding: 8px 10px;
+  }
+  
+  .header-left {
+    gap: 6px;
+  }
+  
+  .tether-logo {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .tether-brand {
+    font-size: 16px;
+  }
+  
   .header-nav {
-    flex-direction: column;
-    gap: 15px;
+    padding: 10px;
+    gap: 8px;
   }
   
   .nav-link {
-    font-size: 14px;
+    font-size: 13px;
+    padding: 8px 12px;
+    text-align: left;
   }
   
-  .hero-title {
+  .header-auth {
+    gap: 6px;
+  }
+  
+  .auth-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 50px;
+  }
+  
+  .mobile-menu-toggle {
+    font-size: 18px;
+    padding: 4px;
+  }
+  
+  .hero-section {
+    padding: 30px 10px 20px;
+  }
+}
+
+/* Tether Footer Styles */
+.tether-footer {
+  background: #232323;
+  margin-top: 60px;
+  padding: 60px 0 30px;
+  color: white;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 60px;
+  margin-bottom: 40px;
+}
+
+.footer-main {
+  max-width: 400px;
+}
+
+.footer-main h2 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.footer-main p {
+  color: #ccc;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 40px;
+}
+
+.footer-section h4 {
+  color: #D3B25B;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section li {
+  margin-bottom: 12px;
+}
+
+.footer-section a {
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.footer-section a:hover {
+  color: #D3B25B;
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #444;
+  padding-top: 30px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.footer-logo {
+  width: 30px;
+  height: 30px;
+  background: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #232323;
+}
+
+.footer-brand-text {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.footer-copyright {
+  color: #ccc;
+  font-size: 14px;
+  margin: 0;
+}
+
+.footer-social {
+  display: flex;
+  gap: 20px;
+}
+
+.social-link {
+  color: white;
+  text-decoration: none;
+  font-size: 20px;
+  transition: color 0.2s ease;
+}
+
+.social-link:hover {
+  color: #D3B25B;
+}
+
+@media (max-width: 768px) {
+  .tether-footer {
+    margin-top: 40px;
+    padding: 40px 0 20px;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 30px;
+  }
+  
+  .footer-main h2 {
     font-size: 2rem;
   }
   
-  .hero-description {
+  .footer-main p {
     font-size: 1rem;
+  }
+  
+  .footer-links {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+  
+  .footer-section h4 {
+    font-size: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .footer-section a {
+    font-size: 13px;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .footer-brand {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .footer-social {
+    gap: 15px;
+  }
+  
+  .social-link {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-links {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .footer-section {
+    text-align: center;
+  }
+  
+  .footer-main h2 {
+    font-size: 1.8rem;
+  }
+  
+  .footer-main p {
+    font-size: 0.9rem;
+  }
+  
+  .footer-copyright {
+    font-size: 12px;
   }
 }
