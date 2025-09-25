@@ -49,7 +49,15 @@ function App() {
     testLogoUrl();
     checkNetwork();
     testMetaMaskLogoUrl();
-  }, []);
+
+    // Cleanup function to remove event listeners
+    return () => {
+      if (provider) {
+        provider.removeAllListeners('chainChanged');
+        provider.removeAllListeners('accountsChanged');
+      }
+    };
+  }, [provider]);
 
   const checkNetwork = async () => {
     if (provider) {
@@ -104,8 +112,15 @@ function App() {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           setIsConnected(true);
+          
+          // Check and ensure correct network
+          await ensureCorrectNetwork();
+          
           await getBalance(accounts[0]);
         }
+        
+        // Set up chain change listener
+        setupChainChangeListener(ethereumProvider);
       } else {
         setStatus('MetaMask not detected. Please install MetaMask to use this app.');
         setStatusType('error');
@@ -130,6 +145,10 @@ function App() {
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         setIsConnected(true);
+        
+        // Check current chain and switch to BSC if needed
+        await ensureCorrectNetwork();
+        
         setStatus('Wallet connected successfully!');
         setStatusType('success');
         await getBalance(accounts[0]);
@@ -299,6 +318,66 @@ function App() {
     }
   };
 
+  const ensureCorrectNetwork = async () => {
+    if (!provider) return;
+
+    try {
+      const chainId = await provider.request({ method: 'eth_chainId' });
+      
+      // If not on BSC, automatically switch
+      if (chainId !== BSC_NETWORK.chainId) {
+        console.log('Wrong network detected, switching to BSC automatically...');
+        setStatus('Switching to Binance Smart Chain automatically...');
+        setStatusType('info');
+        
+        await switchToBSC();
+      } else {
+        setCurrentNetwork('Binance Smart Chain');
+      }
+    } catch (error) {
+      console.error('Error checking network:', error);
+    }
+  };
+
+  const setupChainChangeListener = (ethereumProvider) => {
+    // Listen for chain changes
+    ethereumProvider.on('chainChanged', async (chainId) => {
+      console.log('Chain changed to:', chainId);
+      setCurrentNetwork(getNetworkName(chainId));
+      
+      // If user switched to wrong chain, automatically switch back to BSC
+      if (chainId !== BSC_NETWORK.chainId && isConnected) {
+        console.log('User switched to wrong network, switching back to BSC...');
+        setStatus('Switching back to Binance Smart Chain...');
+        setStatusType('info');
+        
+        try {
+          await switchToBSC();
+        } catch (error) {
+          console.error('Error switching back to BSC:', error);
+        }
+      }
+    });
+
+    // Listen for account changes
+    ethereumProvider.on('accountsChanged', (accounts) => {
+      if (accounts.length === 0) {
+        // User disconnected
+        setAccount(null);
+        setIsConnected(false);
+        setBalance('0');
+        setStatus('Wallet disconnected.');
+        setStatusType('info');
+      } else if (accounts[0] !== account) {
+        // User switched accounts
+        setAccount(accounts[0]);
+        setIsConnected(true);
+        getBalance(accounts[0]);
+        ensureCorrectNetwork();
+      }
+    });
+  };
+
   const disconnectWallet = () => {
     setAccount(null);
     setIsConnected(false);
@@ -389,6 +468,26 @@ function App() {
             </div>
           </div>
         </div>
+        
+        {isConnected && (
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '10px', 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: '8px',
+            border: '1px solid #e9ecef'
+          }}>
+            <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#6c757d' }}>
+              <strong>Current Network:</strong> {currentNetwork}
+            </p>
+            <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#6c757d' }}>
+              <strong>Wallet Address:</strong> {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not connected'}
+            </p>
+            <p style={{ margin: '0', fontSize: '14px', color: '#6c757d' }}>
+              <strong>BNB Balance:</strong> {balance} BNB
+            </p>
+          </div>
+        )}
         
         <div style={{ marginTop: '20px' }}>
           {!isConnected ? (
