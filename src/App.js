@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import detectEthereumProvider from '@metamask/detect-provider';
 import Web3 from 'web3';
+import ErrorBoundary from './ErrorBoundary';
 
 // USDT Token Configuration for BSC
 const USDT_CONFIG = {
@@ -30,6 +31,84 @@ const BSC_NETWORK = {
   blockExplorerUrls: ['https://bscscan.com/'],
 };
 
+// Error handling utilities
+const ErrorTypes = {
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  USER_REJECTED: 'USER_REJECTED',
+  PROVIDER_ERROR: 'PROVIDER_ERROR',
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+};
+
+const getErrorMessage = (error, context = '') => {
+  console.error(`Error in ${context}:`, error);
+  
+  if (error.code === 4001) {
+    return {
+      type: ErrorTypes.USER_REJECTED,
+      message: 'User rejected the request. Please try again if you want to proceed.',
+      userFriendly: 'Request was cancelled. You can try again anytime.'
+    };
+  }
+  
+  if (error.code === -32601) {
+    return {
+      type: ErrorTypes.PROVIDER_ERROR,
+      message: 'Method not supported by your wallet.',
+      userFriendly: 'This feature is not supported by your current wallet. Please try a different wallet or update your current one.'
+    };
+  }
+  
+  if (error.code === 4902) {
+    return {
+      type: ErrorTypes.NETWORK_ERROR,
+      message: 'Network not found in wallet.',
+      userFriendly: 'Network not found. We will try to add it automatically.'
+    };
+  }
+  
+  if (error.message?.includes('network')) {
+    return {
+      type: ErrorTypes.NETWORK_ERROR,
+      message: 'Network connection error.',
+      userFriendly: 'Network connection issue. Please check your internet connection and try again.'
+    };
+  }
+  
+  if (error.message?.includes('timeout')) {
+    return {
+      type: ErrorTypes.NETWORK_ERROR,
+      message: 'Request timeout.',
+      userFriendly: 'Request timed out. Please try again.'
+    };
+  }
+  
+  return {
+    type: ErrorTypes.UNKNOWN_ERROR,
+    message: error.message || 'An unexpected error occurred.',
+    userFriendly: 'Something went wrong. Please try again or refresh the page.'
+  };
+};
+
+const logError = (error, context, additionalInfo = {}) => {
+  const errorDetails = {
+    timestamp: new Date().toISOString(),
+    context,
+    error: {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    },
+    userAgent: navigator.userAgent,
+    url: window.location.href,
+    ...additionalInfo
+  };
+  
+  console.error('Error logged:', errorDetails);
+  
+  // In production, you would send this to an error tracking service
+  // Example: sendToErrorService(errorDetails);
+};
+
 function App() {
   const [account, setAccount] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -43,12 +122,53 @@ function App() {
   const [currentNetwork, setCurrentNetwork] = useState('');
   const [metamaskLogoUrl, setMetamaskLogoUrl] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [maxRetries] = useState(3);
 
   useEffect(() => {
-    checkConnection();
-    testLogoUrl();
-    checkNetwork();
-    testMetaMaskLogoUrl();
+    const initializeApp = async () => {
+      try {
+        // Check network connectivity first
+        const isNetworkAvailable = await checkNetworkConnectivity();
+        if (!isNetworkAvailable) {
+          setStatus('Network connectivity issue detected. Some features may not work properly.');
+          setStatusType('warning');
+        }
+
+        await checkConnection();
+        testLogoUrl();
+        await checkNetwork();
+        testMetaMaskLogoUrl();
+      } catch (error) {
+        const errorInfo = getErrorMessage(error, 'initializeApp');
+        logError(error, 'initializeApp');
+        setStatus(errorInfo.userFriendly);
+        setStatusType('error');
+      }
+    };
+
+    // Global error handlers
+    const handleUnhandledRejection = (event) => {
+      logError(event.reason, 'unhandledRejection', { 
+        type: 'unhandledRejection',
+        promise: event.promise
+      });
+    };
+
+    const handleError = (event) => {
+      logError(event.error, 'globalError', { 
+        type: 'globalError',
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+    };
+
+    // Add global error listeners
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
+    initializeApp();
 
     // Cleanup function to remove event listeners
     return () => {
@@ -56,6 +176,10 @@ function App() {
         provider.removeAllListeners('chainChanged');
         provider.removeAllListeners('accountsChanged');
       }
+      
+      // Remove global error listeners
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
     };
   }, [provider]);
 
@@ -66,8 +190,30 @@ function App() {
         const networkName = getNetworkName(chainId);
         setCurrentNetwork(networkName);
       } catch (error) {
-        console.error('Error checking network:', error);
+        const errorInfo = getErrorMessage(error, 'checkNetwork');
+        logError(error, 'checkNetwork', { 
+          provider: !!provider,
+          isConnected
+        });
+        
+        console.error('Error checking network:', errorInfo.message);
+        setCurrentNetwork('Unknown Network');
       }
+    }
+  };
+
+  // Network connectivity check
+  const checkNetworkConnectivity = async () => {
+    try {
+      const response = await fetch('https://bsc-dataseed.binance.org/', {
+        method: 'HEAD',
+        mode: 'no-cors',
+        cache: 'no-cache'
+      });
+      return true;
+    } catch (error) {
+      logError(error, 'checkNetworkConnectivity');
+      return false;
     }
   };
 
@@ -126,8 +272,13 @@ function App() {
         setStatusType('error');
       }
     } catch (error) {
-      console.error('Error checking connection:', error);
-      setStatus('Error checking MetaMask connection.');
+      const errorInfo = getErrorMessage(error, 'checkConnection');
+      logError(error, 'checkConnection', { 
+        provider: !!provider,
+        isConnected 
+      });
+      
+      setStatus(errorInfo.userFriendly);
       setStatusType('error');
     }
   };
@@ -154,12 +305,13 @@ function App() {
         await getBalance(accounts[0]);
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
-      if (error.code === 4001) {
-        setStatus('User rejected the connection request.');
-      } else {
-        setStatus('Error connecting to MetaMask wallet.');
-      }
+      const errorInfo = getErrorMessage(error, 'connectWallet');
+      logError(error, 'connectWallet', { 
+        provider: !!provider,
+        isConnected 
+      });
+      
+      setStatus(errorInfo.userFriendly);
       setStatusType('error');
     } finally {
       setIsLoading(false);
@@ -167,14 +319,32 @@ function App() {
   };
 
   const getBalance = async (accountAddress) => {
-    if (!web3) return;
+    if (!web3) {
+      console.warn('Web3 not available for balance check');
+      return;
+    }
+    
+    if (!accountAddress) {
+      console.warn('No account address provided for balance check');
+      return;
+    }
     
     try {
       const balance = await web3.eth.getBalance(accountAddress);
       const balanceInEth = web3.utils.fromWei(balance, 'ether');
       setBalance(parseFloat(balanceInEth).toFixed(4));
     } catch (error) {
-      console.error('Error getting balance:', error);
+      const errorInfo = getErrorMessage(error, 'getBalance');
+      logError(error, 'getBalance', { 
+        accountAddress,
+        web3Available: !!web3,
+        provider: !!provider
+      });
+      
+      // Don't show error to user for balance check failures
+      // Just log it and set balance to 0
+      setBalance('0');
+      console.warn('Failed to get balance:', errorInfo.message);
     }
   };
 
@@ -187,6 +357,31 @@ function App() {
 
     setIsLoading(true);
     try {
+      // First, ensure we're on the correct network (BSC)
+      setStatus('Ensuring you are on Binance Smart Chain...');
+      setStatusType('info');
+      
+      const currentChainId = await provider.request({ method: 'eth_chainId' });
+      console.log('Current chain ID:', currentChainId);
+      console.log('Required BSC chain ID:', BSC_NETWORK.chainId);
+      
+      if (currentChainId !== BSC_NETWORK.chainId) {
+        console.log('Not on BSC network, switching...');
+        setStatus('Switching to Binance Smart Chain before adding token...');
+        setStatusType('info');
+        
+        const switchSuccess = await switchToBSC();
+        if (!switchSuccess) {
+          throw new Error('Failed to switch to Binance Smart Chain. Please switch manually and try again.');
+        }
+        
+        setStatus('Successfully switched to Binance Smart Chain. Now adding token...');
+        setStatusType('success');
+      } else {
+        setStatus('Already on Binance Smart Chain. Adding token...');
+        setStatusType('info');
+      }
+
       // Use the full URL for MetaMask compatibility
       const baseUrl = window.location.origin;
       const logoForMetaMask = `${baseUrl}/new-tether-logo.png`;
@@ -217,7 +412,7 @@ function App() {
         });
 
         if (wasAdded) {
-          setStatus('USDT token successfully added to MetaMask! The logo should appear in your wallet.');
+          setStatus('USDT token successfully added to MetaMask on Binance Smart Chain! The logo should appear in your wallet.');
           setStatusType('success');
           return;
         }
@@ -241,7 +436,7 @@ function App() {
           });
 
           if (wasAdded) {
-            setStatus('USDT token added to MetaMask! (Logo may not appear on Android)');
+            setStatus('USDT token added to MetaMask on Binance Smart Chain! (Logo may not appear on Android)');
             setStatusType('success');
             return;
           }
@@ -254,25 +449,58 @@ function App() {
       setStatus('Token was not added. Please try again.');
       setStatusType('error');
     } catch (error) {
-      console.error('Error adding token:', error);
-      if (error.code === 4001) {
-        setStatus('User rejected the token import request.');
-      } else if (error.code === -32601) {
-        setStatus('This method is not supported on your device. Please add the token manually using the contract address.');
-        setStatusType('error');
-      } else {
-        setStatus('Error adding token to MetaMask. Please try again or add manually.');
-      }
+      const errorInfo = getErrorMessage(error, 'addTokenToMetaMask');
+      logError(error, 'addTokenToMetaMask', { 
+        provider: !!provider,
+        isConnected,
+        tokenAddress: USDT_CONFIG.address
+      });
+      
+      setStatus(errorInfo.userFriendly);
       setStatusType('error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(USDT_CONFIG.address);
-    setStatus('Contract address copied to clipboard!');
-    setStatusType('success');
+  const copyAddress = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(USDT_CONFIG.address);
+        setStatus('Contract address copied to clipboard!');
+        setStatusType('success');
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = USDT_CONFIG.address;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          setStatus('Contract address copied to clipboard!');
+          setStatusType('success');
+        } catch (fallbackError) {
+          throw new Error('Clipboard access not available');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    } catch (error) {
+      const errorInfo = getErrorMessage(error, 'copyAddress');
+      logError(error, 'copyAddress', { 
+        clipboardSupported: !!navigator.clipboard,
+        isSecureContext: window.isSecureContext
+      });
+      
+      setStatus('Failed to copy address. Please copy manually: ' + USDT_CONFIG.address);
+      setStatusType('error');
+    }
+    
     setTimeout(() => setStatus(''), 3000);
   };
 
@@ -280,41 +508,86 @@ function App() {
     if (!provider) {
       setStatus('MetaMask not detected.');
       setStatusType('error');
-      return;
+      return false;
     }
 
-    setIsLoading(true);
     try {
-      await provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BSC_NETWORK.chainId }],
-      });
-      setStatus('Switched to Binance Smart Chain!');
-      setStatusType('success');
-      setCurrentNetwork('Binance Smart Chain');
-    } catch (switchError) {
-      // This error code indicates that the chain has not been added to MetaMask
-      if (switchError.code === 4902) {
-        try {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [BSC_NETWORK],
-          });
-          setStatus('Binance Smart Chain added and switched!');
+      console.log('Attempting to switch to BSC network...');
+      
+      // First try to switch to the existing BSC network
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: BSC_NETWORK.chainId }],
+        });
+        
+        // Verify the switch was successful
+        const chainId = await provider.request({ method: 'eth_chainId' });
+        if (chainId === BSC_NETWORK.chainId) {
+          setStatus('Successfully switched to Binance Smart Chain!');
           setStatusType('success');
           setCurrentNetwork('Binance Smart Chain');
-        } catch (addError) {
-          console.error('Error adding BSC network:', addError);
-          setStatus('Error adding Binance Smart Chain network.');
-          setStatusType('error');
+          return true;
+        } else {
+          throw new Error('Network switch verification failed');
         }
-      } else {
-        console.error('Error switching to BSC:', switchError);
-        setStatus('Error switching to Binance Smart Chain.');
-        setStatusType('error');
+      } catch (switchError) {
+        console.log('Switch failed, trying to add network:', switchError);
+        
+        // This error code indicates that the chain has not been added to MetaMask
+        if (switchError.code === 4902) {
+          try {
+            setStatus('Adding Binance Smart Chain to MetaMask...');
+            setStatusType('info');
+            
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [BSC_NETWORK],
+            });
+            
+            // Verify the network was added and we're now on BSC
+            const chainId = await provider.request({ method: 'eth_chainId' });
+            if (chainId === BSC_NETWORK.chainId) {
+              setStatus('Binance Smart Chain added and switched successfully!');
+              setStatusType('success');
+              setCurrentNetwork('Binance Smart Chain');
+              return true;
+            } else {
+              throw new Error('Network addition verification failed');
+            }
+          } catch (addError) {
+            const errorInfo = getErrorMessage(addError, 'switchToBSC_addNetwork');
+            logError(addError, 'switchToBSC_addNetwork', { 
+              provider: !!provider,
+              networkConfig: BSC_NETWORK
+            });
+            
+            setStatus(errorInfo.userFriendly);
+            setStatusType('error');
+            return false;
+          }
+        } else {
+          const errorInfo = getErrorMessage(switchError, 'switchToBSC_switch');
+          logError(switchError, 'switchToBSC_switch', { 
+            provider: !!provider,
+            targetChainId: BSC_NETWORK.chainId
+          });
+          
+          setStatus(errorInfo.userFriendly);
+          setStatusType('error');
+          return false;
+        }
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      const errorInfo = getErrorMessage(error, 'switchToBSC');
+      logError(error, 'switchToBSC', { 
+        provider: !!provider,
+        targetChainId: BSC_NETWORK.chainId
+      });
+      
+      setStatus(errorInfo.userFriendly);
+      setStatusType('error');
+      return false;
     }
   };
 
@@ -335,7 +608,15 @@ function App() {
         setCurrentNetwork('Binance Smart Chain');
       }
     } catch (error) {
-      console.error('Error checking network:', error);
+      const errorInfo = getErrorMessage(error, 'ensureCorrectNetwork');
+      logError(error, 'ensureCorrectNetwork', { 
+        provider: !!provider,
+        isConnected
+      });
+      
+      console.error('Error checking network:', errorInfo.message);
+      // Don't show error to user for network check failures
+      // Just log it silently
     }
   };
 
@@ -354,26 +635,45 @@ function App() {
         try {
           await switchToBSC();
         } catch (error) {
-          console.error('Error switching back to BSC:', error);
+          const errorInfo = getErrorMessage(error, 'setupChainChangeListener_switchBack');
+          logError(error, 'setupChainChangeListener_switchBack', { 
+            chainId,
+            isConnected,
+            targetChainId: BSC_NETWORK.chainId
+          });
+          
+          console.error('Error switching back to BSC:', errorInfo.message);
+          setStatus('Failed to switch back to Binance Smart Chain. Please switch manually.');
+          setStatusType('error');
         }
       }
     });
 
     // Listen for account changes
-    ethereumProvider.on('accountsChanged', (accounts) => {
-      if (accounts.length === 0) {
-        // User disconnected
-        setAccount(null);
-        setIsConnected(false);
-        setBalance('0');
-        setStatus('Wallet disconnected.');
-        setStatusType('info');
-      } else if (accounts[0] !== account) {
-        // User switched accounts
-        setAccount(accounts[0]);
-        setIsConnected(true);
-        getBalance(accounts[0]);
-        ensureCorrectNetwork();
+    ethereumProvider.on('accountsChanged', async (accounts) => {
+      try {
+        if (accounts.length === 0) {
+          // User disconnected
+          setAccount(null);
+          setIsConnected(false);
+          setBalance('0');
+          setStatus('Wallet disconnected.');
+          setStatusType('info');
+        } else if (accounts[0] !== account) {
+          // User switched accounts
+          setAccount(accounts[0]);
+          setIsConnected(true);
+          await getBalance(accounts[0]);
+          await ensureCorrectNetwork();
+        }
+      } catch (error) {
+        const errorInfo = getErrorMessage(error, 'setupChainChangeListener_accountsChanged');
+        logError(error, 'setupChainChangeListener_accountsChanged', { 
+          accountsLength: accounts.length,
+          isConnected
+        });
+        
+        console.error('Error handling account change:', errorInfo.message);
       }
     });
   };
@@ -386,8 +686,44 @@ function App() {
     setStatusType('info');
   };
 
+  // Retry mechanism for failed operations
+  const retryOperation = async (operation, operationName, ...args) => {
+    if (retryCount >= maxRetries) {
+      setStatus(`Failed after ${maxRetries} attempts. Please refresh the page and try again.`);
+      setStatusType('error');
+      setRetryCount(0);
+      return;
+    }
+
+    try {
+      setRetryCount(prev => prev + 1);
+      setStatus(`Retrying ${operationName}... (Attempt ${retryCount + 1}/${maxRetries})`);
+      setStatusType('info');
+      
+      await operation(...args);
+      
+      // Reset retry count on success
+      setRetryCount(0);
+    } catch (error) {
+      const errorInfo = getErrorMessage(error, `retryOperation_${operationName}`);
+      logError(error, `retryOperation_${operationName}`, { 
+        retryCount: retryCount + 1,
+        maxRetries
+      });
+      
+      if (retryCount + 1 < maxRetries) {
+        setTimeout(() => retryOperation(operation, operationName, ...args), 2000);
+      } else {
+        setStatus(errorInfo.userFriendly);
+        setStatusType('error');
+        setRetryCount(0);
+      }
+    }
+  };
+
   return (
-    <div className="container">
+    <ErrorBoundary>
+      <div className="container">
       {/* Official Tether Header */}
       <header className="tether-header">
         <div className="header-content">
@@ -477,9 +813,36 @@ function App() {
             borderRadius: '8px',
             border: '1px solid #e9ecef'
           }}>
-            <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#6c757d' }}>
-              <strong>Current Network:</strong> {currentNetwork}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <p style={{ margin: '0', fontSize: '14px', color: '#6c757d' }}>
+                <strong>Current Network:</strong> 
+                <span style={{ 
+                  color: currentNetwork === 'Binance Smart Chain' ? '#28a745' : '#dc3545',
+                  fontWeight: 'bold',
+                  marginLeft: '5px'
+                }}>
+                  {currentNetwork}
+                  {currentNetwork === 'Binance Smart Chain' ? ' ✅' : ' ❌'}
+                </span>
+              </p>
+              {currentNetwork !== 'Binance Smart Chain' && (
+                <button 
+                  onClick={switchToBSC}
+                  disabled={isLoading}
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: '#009393',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  Switch to BSC
+                </button>
+              )}
+            </div>
             <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#6c757d' }}>
               <strong>Wallet Address:</strong> {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not connected'}
             </p>
@@ -499,20 +862,64 @@ function App() {
               {isLoading ? 'Connecting...' : 'Connect Wallet'}
             </button>
           ) : (
-            <button 
-              className="btn btn-success" 
-              onClick={addTokenToMetaMask}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Adding Token...' : 'Add USDT to MetaMask'}
-            </button>
+            <div>
+              {currentNetwork !== 'Binance Smart Chain' && (
+                <div style={{
+                  padding: '10px',
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffeaa7',
+                  borderRadius: '5px',
+                  marginBottom: '15px',
+                  color: '#856404'
+                }}>
+                  ⚠️ <strong>Warning:</strong> You are not on Binance Smart Chain. 
+                  The token will be automatically added to BSC when you click the button below.
+                </div>
+              )}
+              <button 
+                className="btn btn-success" 
+                onClick={addTokenToMetaMask}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Adding Token...' : 
+                 currentNetwork === 'Binance Smart Chain' ? 
+                 'Add USDT to MetaMask' : 
+                 'Add USDT to MetaMask (Will switch to BSC)'}
+              </button>
+            </div>
           )}
         </div>
       </div>
 
       {status && (
         <div className={`status status-${statusType}`}>
-          {status}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{status}</span>
+            {statusType === 'error' && retryCount === 0 && (
+              <button 
+                onClick={() => {
+                  setRetryCount(0);
+                  if (isConnected) {
+                    retryOperation(addTokenToMetaMask, 'Add Token to MetaMask');
+                  } else {
+                    retryOperation(connectWallet, 'Connect Wallet');
+                  }
+                }}
+                style={{
+                  marginLeft: '10px',
+                  padding: '5px 10px',
+                  backgroundColor: '#009393',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Retry
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -603,7 +1010,8 @@ function App() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 
